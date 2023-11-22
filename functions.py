@@ -31,8 +31,7 @@ def remove_extra_spaces(input_string):
 def select_budget_category(categories_list):
     """Display a numbered list of budget categories and return selected category"""
     # Display numbered list and select
-    print('Budget Categories: ')
-    print('')
+    print('Budget Categories:\n')
     n = 1
     for budget_category in categories_list:
         numbered_categories = f"{n}. {budget_category['Category']}"
@@ -50,49 +49,117 @@ def select_budget_category(categories_list):
             n += 1
 
 
-def duplicate_check(master_list, new_transaction):
+def duplicate_check(bank, master_list, new_transaction):
     """Read all transactions in the master list and determine if transaction already exists. Return keep or delete"""
     keep = True
+    for transaction in master_list:
+        if bank == 'AMEX' and transaction['Reference'] == new_transaction['Reference']:
+            keep_decision = input(f"Transaction already exists! Keep transaction (Y/N): ").lower()
+            if keep_decision == 'y':
+                keep = True
+            else:
+                keep = False
+            return keep
+        elif (bank == 'Chase' and transaction['Date'] == new_transaction['Date'] and transaction['Description'] ==
+              new_transaction['Description']):
+            keep_decision = input(f"Transaction already exists! Keep transaction (Y/N): ").lower()
+            if keep_decision == 'y':
+                keep = True
+            else:
+                keep = False
+            return keep
     return keep
 
 
 def build_amex_transactions(bank, transactions_list, categories_list, master_file):
     """Process AMEX transactions"""
-    if bank == 'AMEX':
-        for transaction in transactions_list:
-            new_amex_transaction = []
+    for transaction in transactions_list:
+        new_amex_transaction = []
 
-            # Prep screen
-            os.system('cls')
-            print('')
+        # Prep screen
+        os.system('cls')
+        print('')
 
-            # Build new transaction
-            date = transaction['Date']
-            description = remove_extra_spaces(transaction['Description'])
-            amount = float(transaction['Amount'])
-            if amount <= 0:
-                type = 'credit'
-            else:
-                type = 'debit'
-            account_name = 'Blue Cash'
-            reference = transaction['Reference']
-            display_transaction = f"Date: {date}, Description: {description}, Amount: ${abs(amount)}\n"
-            print(display_transaction)
-            category = select_budget_category(categories_list)
-            new_transaction = {'Date': date, 'Description': description, 'Amount': abs(amount), 'Transaction Type': type,
-                               'Category': category, 'Account Name': account_name, 'Reference': reference}
+        # Build new transaction
+        date = transaction['Date']
+        description = remove_extra_spaces(transaction['Description'])
+        amount = float(transaction['Amount'])
+        if amount <= 0:
+            type = 'credit'
+        else:
+            type = 'debit'
+        account_name = 'American Express'
+        reference = transaction['Reference']
+        display_transaction = f"Date: {date}, Description: {description}, Amount: ${abs(amount)}, Type: {type}\n"
+        print(display_transaction)
+        category = select_budget_category(categories_list)
+        new_transaction = {'Date': date, 'Description': description, 'Amount': abs(amount), 'Transaction Type': type,
+                           'Category': category, 'Account Name': account_name, 'Reference': reference}
 
-            # Determine if transaction already exists
-            transactions_master_list = read_data_file(master_file)
-            keep = duplicate_check(transactions_master_list, new_transaction)
+        # Determine if transaction already exists
+        transactions_master_list = read_data_file(master_file)
+        keep = duplicate_check(bank, transactions_master_list, new_transaction)
 
-            # Append new transaction to master expenses list
-            if keep:
-                new_amex_transaction.append(new_transaction)
-                append_row_to_file(master_file, new_amex_transaction)
+        # Append new transaction to master expenses list if not duplicate
+        if keep:
+            new_amex_transaction.append(new_transaction)
+            append_row_to_file(master_file, new_amex_transaction)
 
 
 def build_chase_transactions(bank, transactions_list, categories_list, master_file):
     """Process Chase transactions"""
-    pass
+    for transaction in transactions_list:
+        new_chase_transaction = []
 
+        # Prep screen
+        os.system('cls')
+        print('')
+
+        # Build new transaction
+        date = transaction['Posting Date']
+        description = remove_extra_spaces(transaction['Description'])
+        amount = float(transaction['Amount'])
+        if amount >= 0:
+            type = 'credit'
+        else:
+            type = 'debit'
+        account_name = 'Chase Checking'
+        reference = ''
+        display_transaction = f"Date: {date}, Description: {description}, Amount: ${abs(amount)}, Type: {type}\n"
+        print(display_transaction)
+        category = select_budget_category(categories_list)
+        new_transaction = {'Date': date, 'Description': description, 'Amount': abs(amount), 'Transaction Type': type,
+                           'Category': category, 'Account Name': account_name, 'Reference': reference}
+
+        # Determine if transaction already exists
+        transactions_master_list = read_data_file(master_file)
+        keep = duplicate_check(bank, transactions_master_list, new_transaction)
+
+        # Manage insurance and internet payments if needed.
+        # Append new transaction to master expenses list if not duplicate
+        if keep:
+            if 'LAKE SHORE CRYOT PAYROLL' in new_transaction['Description']:
+                add_insurance = input('Transaction is Lake Shore pay. Split to add insurance (Y/N): ').lower()
+                if add_insurance == 'y':
+                    insurance_amt = input('Enter insurance amount (typical = 103.40): ')
+                    new_insurance_transaction = {'Date': date, 'Description': 'Liberty Mutual Insurance',
+                                                 'Amount': insurance_amt, 'Transaction Type': 'debit',
+                                                 'Category': 'Insurance - Auto, Home, Umbrella',
+                                                 'Account Name': account_name, 'Reference': reference}
+                    new_chase_transaction.append(new_insurance_transaction)
+                    append_row_to_file(master_file, new_chase_transaction)
+                    new_chase_transaction = []
+                    new_transaction['Amount'] = new_transaction['Amount'] + float(insurance_amt)
+
+            if 'BZ EVANS' in new_transaction['Description']:
+                internet_amt = 70.50
+                new_internet_transaction = {'Date': date, 'Description': 'Internet', 'Amount': internet_amt,
+                                            'Transaction Type': 'debit', 'Category': 'Internet',
+                                            'Account Name': account_name, 'Reference': reference}
+                new_chase_transaction.append(new_internet_transaction)
+                append_row_to_file(master_file, new_chase_transaction)
+                new_chase_transaction = []
+                new_transaction['Amount'] = new_transaction['Amount'] - internet_amt
+
+            new_chase_transaction.append(new_transaction)
+            append_row_to_file(master_file, new_chase_transaction)
