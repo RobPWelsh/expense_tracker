@@ -1,6 +1,10 @@
 import csv
 import re
 import os
+import colorama
+from colorama import Fore
+
+colorama.init(autoreset=True)
 
 
 def read_data_file(data_file):
@@ -52,9 +56,10 @@ def select_budget_category(categories_list):
 def duplicate_check(bank, master_list, new_transaction):
     """Read all transactions in the master list and determine if transaction already exists. Return keep or delete"""
     keep = True
+    decision_message = f"{Fore.RED}Transaction already exists! Keep transaction (Y/N): "
     for transaction in master_list:
         if bank == 'AMEX' and transaction['Reference'] == new_transaction['Reference']:
-            keep_decision = input(f"Transaction already exists! Keep transaction (Y/N): ").lower()
+            keep_decision = input(decision_message).lower()
             if keep_decision == 'y':
                 keep = True
             else:
@@ -62,7 +67,7 @@ def duplicate_check(bank, master_list, new_transaction):
             return keep
         elif (bank == 'Chase' and transaction['Date'] == new_transaction['Date'] and transaction['Description'] ==
               new_transaction['Description']):
-            keep_decision = input(f"Transaction already exists! Keep transaction (Y/N): ").lower()
+            keep_decision = input(decision_message).lower()
             if keep_decision == 'y':
                 keep = True
             else:
