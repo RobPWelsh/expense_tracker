@@ -89,16 +89,21 @@ def build_amex_transactions(bank, transactions_list, categories_list, master_fil
         date = transaction['Date']
         description = remove_extra_spaces(transaction['Description'])
         amount = float(transaction['Amount'])
+
+        # invert amount
+        amount = amount * -1
+
         if amount <= 0:
-            type = 'credit'
-        else:
             type = 'debit'
+        else:
+            type = 'credit'
+
         account_name = 'American Express'
         reference = transaction['Reference']
-        display_transaction = f"Date: {date}, Description: {description}, Amount: ${abs(amount)}, Type: {type}\n"
+        display_transaction = f"Date: {date}, Description: {description}, Amount: ${amount}, Type: {type}\n"
         print(display_transaction)
         category = select_budget_category(categories_list)
-        new_transaction = {'Date': date, 'Description': description, 'Amount': abs(amount), 'Transaction Type': type,
+        new_transaction = {'Date': date, 'Description': description, 'Amount': amount, 'Transaction Type': type,
                            'Category': category, 'Account Name': account_name, 'Reference': reference}
 
         # Determine if transaction already exists
@@ -123,17 +128,19 @@ def build_chase_transactions(bank, transactions_list, categories_list, master_fi
         # Build new transaction
         date = transaction['Posting Date']
         description = remove_extra_spaces(transaction['Description'])
+
         amount = float(transaction['Amount'])
         if amount >= 0:
             type = 'credit'
         else:
             type = 'debit'
         account_name = 'Chase Checking'
+
         reference = ''
-        display_transaction = f"Date: {date}, Description: {description}, Amount: ${abs(amount)}, Type: {type}\n"
+        display_transaction = f"Date: {date}, Description: {description}, Amount: ${amount}, Type: {type}\n"
         print(display_transaction)
         category = select_budget_category(categories_list)
-        new_transaction = {'Date': date, 'Description': description, 'Amount': abs(amount), 'Transaction Type': type,
+        new_transaction = {'Date': date, 'Description': description, 'Amount': amount, 'Transaction Type': type,
                            'Category': category, 'Account Name': account_name, 'Reference': reference}
 
         # Determine if transaction already exists
@@ -144,9 +151,12 @@ def build_chase_transactions(bank, transactions_list, categories_list, master_fi
         # Append new transaction to master expenses list if not duplicate
         if keep:
             if 'LAKE SHORE CRYOT PAYROLL' in new_transaction['Description']:
+
+                # Create a new transaction for the insurance and append it to the expenses master file
                 add_insurance = input('Transaction is Lake Shore pay. Split to add insurance (Y/N): ').lower()
                 if add_insurance == 'y':
-                    insurance_amt = input('Enter insurance amount (typical = 103.40): ')
+                    insurance_amt = float(input('Enter insurance amount (typical = 103.40): '))
+                    insurance_amt = insurance_amt * -1
                     new_insurance_transaction = {'Date': date, 'Description': 'Liberty Mutual Insurance',
                                                  'Amount': insurance_amt, 'Transaction Type': 'debit',
                                                  'Category': 'Insurance - Auto, Home, Umbrella',
@@ -154,17 +164,24 @@ def build_chase_transactions(bank, transactions_list, categories_list, master_fi
                     new_chase_transaction.append(new_insurance_transaction)
                     append_row_to_file(master_file, new_chase_transaction)
                     new_chase_transaction = []
-                    new_transaction['Amount'] = new_transaction['Amount'] + float(insurance_amt)
+
+                    # Add the insurance amount to the paycheck transaction
+                    new_transaction['Amount'] = new_transaction['Amount'] + float(abs(insurance_amt))
 
             if 'BZ EVANS' in new_transaction['Description']:
-                internet_amt = 70.50
+
+                # Create a new transaction for the internet and append it to the expenses master file
+                internet_amt = -70.50
                 new_internet_transaction = {'Date': date, 'Description': 'Internet', 'Amount': internet_amt,
                                             'Transaction Type': 'debit', 'Category': 'Internet',
                                             'Account Name': account_name, 'Reference': reference}
                 new_chase_transaction.append(new_internet_transaction)
                 append_row_to_file(master_file, new_chase_transaction)
                 new_chase_transaction = []
-                new_transaction['Amount'] = new_transaction['Amount'] - internet_amt
 
+                # Deduct the internet amount from the rent transaction
+                new_transaction['Amount'] = new_transaction['Amount'] + internet_amt
+
+            # Append the transaction to the expenses master file
             new_chase_transaction.append(new_transaction)
             append_row_to_file(master_file, new_chase_transaction)
