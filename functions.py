@@ -180,7 +180,7 @@ def build_chase_transactions(bank, transactions_list, categories_list, master_fi
                 new_chase_transaction = []
 
                 # Deduct the internet amount from the rent transaction
-                new_transaction['Amount'] = new_transaction['Amount'] + internet_amt
+                new_transaction['Amount'] = new_transaction['Amount'] - internet_amt
 
             # Append the transaction to the expenses master file
             new_chase_transaction.append(new_transaction)

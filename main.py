@@ -4,7 +4,7 @@ from functions import *
 
 #  Read Categories and Master Transactions files
 categories_file = Path.home() / 'OneDrive' / 'Expense Tracker' / 'expense_categories.csv'
-transactions_master_file = Path.home() / 'OneDrive' / 'Expense Tracker' / 'expenses_master_test.csv'
+transactions_master_file = Path.home() / 'OneDrive' / 'Expense Tracker' / 'expenses_master.csv'
 categories_list = read_data_file(categories_file)
 transactions_master_list = read_data_file(transactions_master_file)
 
