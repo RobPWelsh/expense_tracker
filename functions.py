@@ -168,7 +168,7 @@ def build_chase_transactions(bank, transactions_list, categories_list, master_fi
                     # Add the insurance amount to the paycheck transaction
                     new_transaction['Amount'] = new_transaction['Amount'] + float(abs(insurance_amt))
 
-            if 'BZ EVANS' in new_transaction['Description']:
+            if 'Flats at EF12' in new_transaction['Description']:
 
                 # Create a new transaction for the internet and append it to the expenses master file
                 internet_amt = -70.50
