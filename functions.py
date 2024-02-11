@@ -155,7 +155,7 @@ def build_chase_transactions(bank, transactions_list, categories_list, master_fi
                 # Create a new transaction for the insurance and append it to the expenses master file
                 add_insurance = input('Transaction is Lake Shore pay. Split to add insurance (Y/N): ').lower()
                 if add_insurance == 'y':
-                    insurance_amt = float(input('Enter insurance amount (typical = 103.40): '))
+                    insurance_amt = float(input('Enter insurance amount (typical = 117.75): '))
                     insurance_amt = insurance_amt * -1
                     new_insurance_transaction = {'Date': date, 'Description': 'Liberty Mutual Insurance',
                                                  'Amount': insurance_amt, 'Transaction Type': 'debit',
